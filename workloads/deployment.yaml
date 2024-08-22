@@ -7,7 +7,7 @@ spec:
   selector:
     matchLabels:
       app: hello-world
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
@@ -23,6 +23,7 @@ kind: Service
 apiVersion: v1
 metadata:
   name: hello-world-service
+  namespace: k8s-intro
 spec:
   selector:
     app: hello-world
