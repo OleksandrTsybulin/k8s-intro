@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: k8s-intro
+spec:
+  serviceName: "postgres"
+  replicas: 2
+  selector:
+    matchLabels:
+        app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:latest
+        envFrom:
+        - configMapRef:
+            name: postgres-config
+        - secretRef:
+            name: postgres-secrets
+        ports:
+        - containerPort: 5432
+          name: postgredb
+        volumeMounts:
+        - name: postgredb
+          mountPath: /var/lib/postgresql
+          subPath: postgres
+  volumeClaimTemplates:
+  - metadata:
+      name: postgredb
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+  namespace: k8s-intro
+spec:
+  ports:
+    - port: 5432
+      name: postgres
+      targetPort: postgredb
+  type: ClusterIP
+  selector:
+    app: postgres
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: k8s-intro
+  labels:
+    app: ecommerce
+    tier: postgres
+data:
+  POSTGRES_DB: product
+  POSTGRES_USER: product_robot
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secrets
+  namespace: k8s-intro
+type: Opaque
+data:
+  POSTGRES_USER: cHJvZHVjdF9yb2JvdA==
+  POSTGRES_PASSWORD: cHIwZHIwYjB0
