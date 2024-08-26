@@ -5,6 +5,9 @@ metadata:
   namespace: k8s-intro
 spec:
   serviceName: "postgres"
+  persistentVolumeClaimRetentionPolicy:     # Policy what related to PVC template
+    whenDeleted: Delete           # Delete/Retain
+    whenScaled: Retain            # Delete/Retain
   replicas: 2
   selector:
     matchLabels:
@@ -16,7 +19,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: postgres:latest
+        image: postgres:12.20-bullseye
         envFrom:
         - configMapRef:
             name: postgres-config
@@ -64,7 +67,6 @@ metadata:
     tier: postgres
 data:
   POSTGRES_DB: product
-  POSTGRES_USER: product_robot
 ---
 apiVersion: v1
 kind: Secret
