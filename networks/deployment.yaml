@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world-deployment
+  namespace: k8s-intro
+spec:
+  selector:
+    matchLabels:
+      app: hello-world
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: hello-world
+    spec:
+      containers:
+      - name: hello-world
+        image: training/webapp:latest
+        ports:
+        - containerPort: 5000
+        # add resource usage limitation
+        resources:
+          requests:
+            cpu: "0.1"
+            memory: 200
+          limits:
+            cpu: "0.2"
+            memory: 300
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: hello-world-service
+  namespace: k8s-intro
+spec:
+  selector:
+    app: hello-world
+  ports:
+    - protocol: TCP
+      targetPort: 5000
+      port: 5000
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-world
+
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: "helloworld.k8s-intra.pp.ua"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: hello-world
+            port:
+              number: 5000

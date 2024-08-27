@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: k8s-intro
+spec:
+  serviceName: "postgres"
+  persistentVolumeClaimRetentionPolicy:     # Policy what related to PVC template
+    whenDeleted: Delete           # Delete/Retain
+    whenScaled: Retain            # Delete/Retain
+  replicas: 2
+  selector:
+    matchLabels:
+        app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:12.20-bullseye
+        envFrom:
+        - configMapRef:
+            name: postgres-config
+        - secretRef:
+            name: postgres-secrets
+        ports:
+        - containerPort: 5432
+          name: postgredb
+        volumeMounts:
+        - name: postgredb
+          mountPath: /var/lib/postgresql
+          subPath: postgres
+  volumeClaimTemplates:
+  - metadata:
+      name: postgredb
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+  namespace: k8s-intro
+spec:
+  ports:
+    - port: 5432
+      name: postgres
+      targetPort: postgredb
+  type: ClusterIP
+  selector:
+    app: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-lb
+  labels:
+    app: postgres
+  namespace: k8s-intro
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+spec:
+  ports:
+    - port: 5432
+      name: postgres
+      targetPort: postgredb
+  type: LoadBalancer
+  selector:
+    app: postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-np
+  labels:
+    app: postgres
+  namespace: k8s-intro
+spec:
+  ports:
+    - port: 5432
+      name: postgres
+      targetPort: postgredb
+      nodePort: 30432         
+  type: NodePort
+  selector:
+    app: postgres
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: k8s-intro
+  labels:
+    app: ecommerce
+    tier: postgres
+data:
+  POSTGRES_DB: product_robot
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secrets
+  namespace: k8s-intro
+type: Opaque
+stringData:
+  POSTGRES_USER: product_robot
+  POSTGRES_PASSWORD: pr0dr0b0t
+
+
+  # SELECT * FROM pg_catalog.pg_tables;
