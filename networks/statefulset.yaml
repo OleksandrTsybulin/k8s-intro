@@ -65,7 +65,7 @@ metadata:
     app: postgres
   namespace: k8s-intro
   annotations:
-    service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
 spec:
   ports:
     - port: 5432

@@ -22,10 +22,10 @@ spec:
         resources:
           requests:
             cpu: "0.1"
-            memory: 200
+            memory: "200Mi"
           limits:
             cpu: "0.2"
-            memory: 300
+            memory: "300Mi"
 
 ---
 kind: Service
@@ -42,11 +42,27 @@ spec:
       port: 5000
   type: ClusterIP
 ---
+kind: Service
+apiVersion: v1
+metadata:
+  name: hello-world-service-lb
+  namespace: k8s-intro
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "false"
+spec:
+  selector:
+    app: hello-world
+  ports:
+    - protocol: TCP
+      targetPort: 5000
+      port: 5000
+  type: LoadBalancer
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hello-world
-
+  namespace: k8s-intro
 spec:
   ingressClassName: nginx
   rules:
@@ -57,6 +73,10 @@ spec:
         path: "/"
         backend:
           service:
-            name: hello-world
+            name: hello-world-service
             port:
               number: 5000
+  tls:
+  - hosts:
+     - helloworld.k8s-intra.pp.ua
+    secretName: testsecret-tls
