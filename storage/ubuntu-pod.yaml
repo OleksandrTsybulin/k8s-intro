@@ -1,0 +1,47 @@
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu
+  namespace: k8s-intro
+spec:
+  containers:
+    - name: ubuntu
+      image: ubuntu
+      command:
+        - sleep
+        - infinity
+      volumeMounts:
+        - name: secret-volume1
+          readOnly: true
+          mountPath: "/etc/secret-volume"
+        - name: secret-volume2
+          readOnly: true
+          mountPath: "/etc/secret-volume2"
+  volumes:
+  - name: secret-volume1
+    secret:
+      secretName: secret-volume-secret
+      items:
+      - key: file1.yaml
+        path: file1.yaml
+  - name: secret-volume2
+    secret:
+      secretName: secret-volume-secret
+      items:
+      - key: file2.yaml
+        path: file2.yaml
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-volume-secret
+  namespace: k8s-intro
+type: Opaque
+stringData:
+  file1.yaml: |
+    product_robot: test2
+    line: 2
+  file2.yaml: |
+    line1: 1test
+    line2: 2
